@@ -10,12 +10,22 @@ document.addEventListener("DOMContentLoaded", function () {
   const frameColourSelect = document.querySelector("#pa_frame-colour");
   const sizeSelect = document.querySelector("#pa_size");
 
-  // Hide other inputs at the start
+  // Hide other inputs on start
   if (table.rows.length > 1) {
     hideRow(frameTypeRow);
     hideRow(frameColourRow);
     hideRow(sizeRow);
   }
+
+  // hide no colour value on start
+  hideValues(frameColourSelect, ["frameless-no-colour"]);
+
+  // re-order select options
+  const customOrder = ["print", "standard-canvas", "premium-canvas"];
+  reOrderOptions(printTypeSelect, customOrder);
+
+  // Reset print type if item has been added to cart
+  resetFrameTypeSelect();
 
   // PRINT TYPE SELECT LOGIC
   printTypeSelect.addEventListener("change", function () {
@@ -30,15 +40,38 @@ document.addEventListener("DOMContentLoaded", function () {
     const printValues = ["framed", "print-only"];
     const canvasValues = ["box-frame", "no-frame"];
 
+    const printSizes = ["8x12", "a0", "a1", "a2", "a3", "other-size"];
+    const canvasSizes = [
+      "100x50",
+      "60x30",
+      "90x30",
+      "120x80",
+      "45x30",
+      "50x40",
+      "60x90",
+      "75x100",
+      "75x50",
+      "100x100",
+      "30x30",
+      "40x40",
+      "60x60",
+      "75x75",
+      "other-size",
+    ];
+
     switch (this.value) {
       case "print":
         showValues(frameTypeSelect, printValues);
         hideValues(frameTypeSelect, canvasValues);
+        hideValues(sizeSelect, canvasSizes);
+        showValues(sizeSelect, printSizes);
         break;
       case "premium-canvas":
       case "standard-canvas":
         showValues(frameTypeSelect, canvasValues);
         hideValues(frameTypeSelect, printValues);
+        hideValues(sizeSelect, printSizes);
+        showValues(sizeSelect, canvasSizes);
         break;
       default:
         break;
@@ -56,29 +89,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const framedValues = ["black", "pine", "white", "walnut"];
     const boxFrameValues = ["black", "white", "dark-walnut"];
 
-    const framelessText = "Frameless (no colour)";
-    const framelessValue = "frameless-no-colour";
-
     switch (this.value) {
       case "framed":
         showValues(frameColourSelect, framedValues);
         hideValues(frameColourSelect, ["dark-walnut"]);
-        removeColourlessOption(frameColourSelect, framelessValue);
         break;
       case "box-frame":
         showValues(frameColourSelect, boxFrameValues);
         hideValues(frameColourSelect, ["pine", "walnut"]);
-        removeColourlessOption(frameColourSelect, framelessValue);
         break;
       case "print-only":
       case "no-frame":
         hideRow(frameColourRow);
-        addColourlessOption(frameColourSelect, framelessValue, framelessText);
+        frameColourSelect.value = "frameless-no-colour";
         break;
       default:
         break;
     }
   });
+
+  sizeSelect.addEventListener("change", function () {});
+
+  // SIZE TYPE SELECT LOGIC
 
   // GLOBAL FUNCTIONS
   function clearField(field) {
@@ -109,21 +141,29 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // remove new colour option if it was added
-  function removeColourlessOption(select, value) {
-    const framelessOption = Array.from(select.options).find(
-      (option) => option.value === value
-    );
-    console.log(framelessOption);
-    if (framelessOption) {
-      framelessOption.remove();
+  function resetFrameTypeSelect() {
+    const successElement = document.querySelector(".is-success");
+    if (successElement) {
+      printTypeSelect.selectedIndex = 0;
     }
   }
 
-  // create new colour option to bypass required form field
-  function addColourlessOption(select, value, text) {
-    const hasNoFrame = new Option(text, value);
-    select.add(hasNoFrame);
-    select.selectedIndex = select.options.length - 1;
+  // re-order print type select options
+  function reOrderOptions(selectField, order) {
+    const options = Array.from(selectField.options);
+    options.sort(function (a, b) {
+      return order.indexOf(a.value) - order.indexOf(b.value);
+    });
+
+    const defaultSelectedIndex = printTypeSelect.selectedIndex;
+
+    while (selectField.options.length) {
+      selectField.remove(0);
+    }
+    options.forEach(function (option) {
+      selectField.add(option);
+    });
+
+    selectField.selectedIndex = defaultSelectedIndex;
   }
 });

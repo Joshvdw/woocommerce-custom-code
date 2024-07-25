@@ -4,7 +4,6 @@
 add_theme_support('woocommerce');
 
 /* enqueue scripts and style from parent theme */
-
 function my_theme_enqueue_styles() {
     wp_register_style( 'parent-style', get_template_directory_uri() . '/style.css' );
     wp_enqueue_style( 'child-style',
@@ -23,6 +22,12 @@ function my_custom_enqueue_scripts() {
     wp_enqueue_script('my-custom-script', get_stylesheet_directory_uri() . '/custom-script.js', array(), false, true);
 }
 add_action('wp_enqueue_scripts', 'my_custom_enqueue_scripts', 99);
+
+// custom product variations
+function my_custom_enqueue_scripts_2() {
+    wp_enqueue_script('custom-conditional-rendering', get_stylesheet_directory_uri() . '/js/custom-conditional-rendering.js', array(), false, true);
+}
+add_action('wp_enqueue_scripts', 'my_custom_enqueue_scripts_2', 99);
 
 
 // change search placeholder
