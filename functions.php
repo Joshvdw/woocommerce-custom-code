@@ -41,6 +41,53 @@ function html5_search_form( $form ) {
 }
  add_filter( 'get_search_form', 'html5_search_form' );
 
+ // REMOVE ADDRESS FROM LOCAL PICKUP
+ 
+// Function to remove billing and shipping addresses for local pickup orders
+function hide_address_for_local_pickup( $order_id ) {
+    $order = wc_get_order( $order_id );
+
+    // Check if the shipping method is 'Local Pickup'
+    $shipping_methods = $order->get_shipping_methods();
+    $is_local_pickup = false;
+    foreach ( $shipping_methods as $shipping_method ) {
+        if ( strpos( $shipping_method->get_method_id(), 'local_pickup' ) !== false ) {
+            $is_local_pickup = true;
+            break;
+        }
+    }
+
+    // Remove addresses if it's a local pickup
+    if ( $is_local_pickup ) {
+        add_filter( 'woocommerce_order_get_formatted_billing_address', '__return_empty_string', 10, 2 );
+        add_filter( 'woocommerce_order_get_formatted_shipping_address', '__return_empty_string', 10, 2 );
+    }
+}
+add_action( 'woocommerce_thankyou', 'hide_address_for_local_pickup', 10, 1 );
+add_action( 'woocommerce_view_order', 'hide_address_for_local_pickup', 10, 1 );
+add_action( 'woocommerce_checkout_order_processed', 'hide_address_for_local_pickup', 10, 1 );
+
+// Optionally hide the addresses on the email as well
+function hide_address_for_local_pickup_in_email( $order, $sent_to_admin, $plain_text, $email ) {
+    // Check if the shipping method is 'Local Pickup'
+    $shipping_methods = $order->get_shipping_methods();
+    $is_local_pickup = false;
+    foreach ( $shipping_methods as $shipping_method ) {
+        if ( strpos( $shipping_method->get_method_id(), 'local_pickup' ) !== false ) {
+            $is_local_pickup = true;
+            break;
+        }
+    }
+
+    // Remove addresses if it's a local pickup
+    if ( $is_local_pickup ) {
+        add_filter( 'woocommerce_order_get_formatted_billing_address', '__return_empty_string', 10, 2 );
+        add_filter( 'woocommerce_order_get_formatted_shipping_address', '__return_empty_string', 10, 2 );
+    }
+}
+add_action( 'woocommerce_email_order_details', 'hide_address_for_local_pickup_in_email', 10, 4 );
+
+
 // /**
 // * apply_filters
 // * @link https://developer.wordpress.org/reference/hooks/login_redirect/
