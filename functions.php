@@ -17,6 +17,14 @@ add_action( 'wp_enqueue_scripts', 'my_theme_enqueue_styles' );
 // Remove the category count for WooCommerce categories
 add_filter( 'woocommerce_subcategory_count_html', '__return_null' );
 
+// Remove 'Additional Information' tab from product page
+add_filter('woocommerce_product_tabs', 'remove_additional_information_tab', 98);
+function remove_additional_information_tab($tabs) {
+    // Remove the additional information tab
+    unset($tabs['additional_information']);
+    return $tabs;
+}
+
 // Add custom js file in order to make jigsaw category link open in a new tab
 function my_custom_enqueue_scripts() {
     wp_enqueue_script('my-custom-script', get_stylesheet_directory_uri() . '/custom-script.js', array(), false, true);
@@ -29,6 +37,46 @@ function my_custom_enqueue_scripts_2() {
 }
 add_action('wp_enqueue_scripts', 'my_custom_enqueue_scripts_2', 99);
 
+
+// Refresh shipping zone on address change 
+add_action( 'woocommerce_after_checkout_form', 'refresh_shipping_on_address_change' );
+
+function refresh_shipping_on_address_change() {
+    wc_enqueue_js("
+        jQuery( function( $ ) {
+            $('form.checkout').on( 'change', 'select#billing_state, #shipping_postcode, #shipping_country', function() {
+                $('body').trigger('update_checkout');
+            });
+        });
+    ");
+}
+
+// show empty product categories
+const galleryCategoryId = 359;
+const calendarCategoryId = 23;
+const puzzlesCategoryId = 383;
+const greetingCardsCategoryId = 402;
+
+add_filter('woocommerce_product_subcategories_hide_empty', 'custom_hide_empty_categories', 10, 1);
+function custom_hide_empty_categories($hide_empty) {
+    return false;
+}
+add_filter('woocommerce_product_subcategories_args', 'custom_include_specific_category', 10, 1);
+function custom_include_specific_category($args) {
+    if (is_shop()) {
+        $args['include'] = array(galleryCategoryId, calendarCategoryId, puzzlesCategoryId, greetingCardsCategoryId); 
+    }
+    return $args;
+}
+
+// make jigsaw puzzles category an external link 
+add_filter('term_link', 'custom_category_link', 10, 3);
+function custom_category_link($url, $term, $taxonomy) {
+    if ($taxonomy === 'product_cat' && $term->slug === 'puzzles') {
+        return 'https://jigsawgallery.com.au/collections/lotje-mcdonald?fbclid=IwAR1cNAywAyebL0l1Jz5NP9lEZ2a5ES6uSzLfif9jlzo2Qto-URgDHDYi-Nc';
+    }
+    return $url;
+}
 
 // change search placeholder
 function html5_search_form( $form ) { 
